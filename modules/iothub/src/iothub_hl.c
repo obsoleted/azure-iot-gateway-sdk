@@ -19,6 +19,8 @@
 #define SUFFIX "IoTHubSuffix"
 #define HUBNAME "IoTHubName"
 #define TRANSPORT "Transport"
+#define MINIMUMPOLLINGTIME "MinimumPollingTime"
+
 
 static int strcmp_i(const char* lhs, const char* rhs)
 {
@@ -92,12 +94,26 @@ static MODULE_HANDLE IotHub_HL_Create(BROKER_HANDLE broker, const void* configur
                     /*Codes_SRS_IOTHUBMODULE_HL_05_002: [ If the value of "Transport" is not one of "HTTP", "AMQP", or "MQTT" (case-insensitive) then `IotHub_HL_Create` shall fail and return NULL. ]*/
                     /*Codes_SRS_IOTHUBMODULE_HL_17_008: [ `IotHub_HL_Create` shall invoke the IotHub module's create function, using the broker, IotHubName, IoTHubSuffix, and Transport. ]*/
                     bool foundTransport = true;
+                    const char* MinimumPollingTimeString;
                     IOTHUB_CONFIG llConfiguration;
                     llConfiguration.IoTHubName = IoTHubName;
                     llConfiguration.IoTHubSuffix = IoTHubSuffix;
+                    llConfiguration.MinimumPollingTime = 0;
 
                     if (strcmp_i(transport, "HTTP") == 0)
                     {
+                        /*Codes_SRS_IOTHUBMODULE_HL_20_015: [ If the JSON object does not contain a value named "MinimumPollingTime" or the value is not an integer or the value is 0 then `IoTHubHttp_HL_Create` log an error and continue. ]*/
+
+                        MinimumPollingTimeString = json_object_get_string(obj, MINIMUMPOLLINGTIME);
+
+                        if (MinimumPollingTimeString != NULL && (llConfiguration.MinimumPollingTime = (unsigned int)atoi(MinimumPollingTimeString)) == 0)
+
+                        {
+
+                            LogError("%s configuration option has invalid value %s, default will be used.", MINIMUMPOLLINGTIME, MinimumPollingTimeString);
+
+                        }
+
                         llConfiguration.transportProvider = HTTP_Protocol;
                     }
                     else if (strcmp_i(transport, "AMQP") == 0)
