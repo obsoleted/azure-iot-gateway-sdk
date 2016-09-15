@@ -137,6 +137,10 @@ static const char* CONSTMAP_VALUES_VALID_1[4] = { "mapping", "firstDevice", "che
 
 #define MESSAGE_HANDLE_VALID_2 ((MESSAGE_HANDLE)(7))
 #define CONSTMAP_HANDLE_VALID_2 ((CONSTMAP_HANDLE)(7))
+#define MESSAGE_HANDLE_VALID_3 ((MESSAGE_HANDLE)(8))
+#define CONSTMAP_HANDLE_VALID_3 ((CONSTMAP_HANDLE)(8))
+#define MESSAGE_HANDLE_VALID_4 ((MESSAGE_HANDLE)(9))
+#define CONSTMAP_HANDLE_VALID_4 ((CONSTMAP_HANDLE)(9))
 static const CONSTBUFFER CONSTBUFFER_VALID_CONTENT2 =
 {
     NULL,
@@ -146,8 +150,10 @@ static const CONSTBUFFER* CONSTBUFFER_VALID_2 = &CONSTBUFFER_VALID_CONTENT2;
 static IOTHUB_CLIENT_HANDLE IOTHUB_CLIENT_HANDLE_VALID_2 = ((IOTHUB_CLIENT_HANDLE)(7));
 static IOTHUB_MESSAGE_HANDLE IOTHUB_MESSAGE_HANDLE_VALID_2 = ((IOTHUB_MESSAGE_HANDLE)(7));
 static MAP_HANDLE MAP_HANDLE_VALID_2 = ((MAP_HANDLE)(7));
-static const char* CONSTMAP_KEYS_VALID_2[3] = { "source", "deviceName", "deviceKey"};
-static const char* CONSTMAP_VALUES_VALID_2[3] = { "mapping", "secondDevice", "red"};
+static const char* CONSTMAP_KEYS_VALID_2[3] = { "source", "deviceName", "deviceKey" };
+static const char* CONSTMAP_VALUES_VALID_2[3] = { "mapping", "secondDevice", "red" };
+static const char* CONSTMAP_KEYS_VALID_3[3] = { "source", "deviceName", "deviceToken" };
+static const char* CONSTMAP_VALUES_VALID_3[3] = { "mapping", "secondDevice", "blue" };
 
 /*these are simple cached variables*/
 static pfModule_Create Module_Create = NULL; /*gets assigned in TEST_SUITE_INITIALIZE*/
@@ -209,6 +215,18 @@ public:
         else if (handle == CONSTMAP_HANDLE_VALID_2)
         {
             *keys = CONSTMAP_KEYS_VALID_2;
+            *values = CONSTMAP_VALUES_VALID_2;
+            *count = 3;
+        }
+        else if (handle == CONSTMAP_HANDLE_VALID_3)
+        {
+            *keys = CONSTMAP_KEYS_VALID_3;
+            *values = CONSTMAP_VALUES_VALID_3;
+            *count = 3;
+        }
+        else if (handle == CONSTMAP_HANDLE_VALID_4)
+        {
+            *keys = CONSTMAP_KEYS_VALID_3;
             *values = CONSTMAP_VALUES_VALID_2;
             *count = 3;
         }
@@ -430,6 +448,14 @@ public:
         {
             result2 = CONSTMAP_HANDLE_VALID_2;
         }
+        else if (message == MESSAGE_HANDLE_VALID_3)
+        {
+            result2 = CONSTMAP_HANDLE_VALID_3;
+        }
+        else if (message == MESSAGE_HANDLE_VALID_4)
+        {
+            result2 = CONSTMAP_HANDLE_VALID_4;
+        }
         else
         {
             result2 = NULL;
@@ -470,9 +496,35 @@ public:
         {
             size_t i;
             result2 = NULL;
-            for (i = 0; i < sizeof(CONSTMAP_KEYS_VALID_2)/sizeof(CONSTMAP_KEYS_VALID_2[0]); i++)
+            for (i = 0; i < sizeof(CONSTMAP_KEYS_VALID_2) / sizeof(CONSTMAP_KEYS_VALID_2[0]); i++)
             {
                 if (strcmp(CONSTMAP_KEYS_VALID_2[i], key) == 0)
+                {
+                    result2 = CONSTMAP_VALUES_VALID_2[i];
+                    break;
+                }
+            }
+        }
+        else if (handle == CONSTMAP_HANDLE_VALID_3)
+        {
+            size_t i;
+            result2 = NULL;
+            for (i = 0; i < sizeof(CONSTMAP_KEYS_VALID_3) / sizeof(CONSTMAP_KEYS_VALID_3[0]); i++)
+            {
+                if (strcmp(CONSTMAP_KEYS_VALID_3[i], key) == 0)
+                {
+                    result2 = CONSTMAP_VALUES_VALID_3[i];
+                    break;
+                }
+            }
+        }
+        else if (handle == CONSTMAP_HANDLE_VALID_4)
+        {
+            size_t i;
+            result2 = NULL;
+            for (i = 0; i < sizeof(CONSTMAP_KEYS_VALID_3) / sizeof(CONSTMAP_KEYS_VALID_3[0]); i++)
+            {
+                if (strcmp(CONSTMAP_KEYS_VALID_3[i], key) == 0)
                 {
                     result2 = CONSTMAP_VALUES_VALID_2[i];
                     break;
@@ -515,6 +567,14 @@ public:
             result2 = CONSTBUFFER_VALID_1;
         }
         else if (message == MESSAGE_HANDLE_VALID_2)
+        {
+            result2 = CONSTBUFFER_VALID_2;
+        }
+        else if (message == MESSAGE_HANDLE_VALID_3)
+        {
+            result2 = CONSTBUFFER_VALID_2;
+        }
+        else if (message == MESSAGE_HANDLE_VALID_4)
         {
             result2 = CONSTBUFFER_VALID_2;
         }
@@ -892,7 +952,7 @@ BEGIN_TEST_SUITE(iothub_ut)
         Module_Destroy(module);
     }
 
-    /*Tests_SRS_IOTHUBMODULE_20_001: [If minimum polling time is not 0, `IoTHub_Create` shall configure the http transport with the minimum polling time calling IoTHubTransport_SetOption on the transport provider] */
+    /*Tests_SRS_IOTHUBMODULE_20_001: [ If minimum polling time is not 0, `IoTHubHttp_Create` shall configure the http transport with the minimum polling time calling IoTHubTransport_SetOption on the transport provider] */
     TEST_FUNCTION(IoTHub_Create_succeeds_with_MinimumPollingTime_not_zero)
     {
         ///arrange
@@ -930,7 +990,7 @@ BEGIN_TEST_SUITE(iothub_ut)
         Module_Destroy(module);
     }
 
-    /*Tests_SRS_IOTHUBMODULE_20_001: [If minimum polling time is not 0, `IoTHubHttp_Create` shall configure the http transport with the minimum polling time calling IoTHubTransport_SetOption on the transport provider] */
+    /*Tests_SRS_IOTHUBMODULE_20_001: [ If minimum polling time is not 0, `IoTHubHttp_Create` shall configure the http transport with the minimum polling time calling IoTHubTransport_SetOption on the transport provider] */
     TEST_FUNCTION(IoTHub_Create_fails_when_SetOption_fails)
     {
         ///arrange
@@ -1815,6 +1875,134 @@ BEGIN_TEST_SUITE(iothub_ut)
         Module_Destroy(module);
 
     }
+
+    /*Tests_SRS_IOTHUBMODULE_20_002: [ If an existing `PERSONALITY` has a device token, and it is different than the one passed, it shall be destroyed and a new one created]*/
+    TEST_FUNCTION(IotHub_Receive_after_Receive_same_device_with_different_token_succeeds)
+    {
+        ///arrange
+        IotHubMocks mocks;
+        auto module = Module_Create(BROKER_HANDLE_VALID, &config_valid);
+        Module_Receive(module, MESSAGE_HANDLE_VALID_3);
+        mocks.ResetAllCalls();
+
+        STRICT_EXPECTED_CALL(mocks, Message_GetProperties(MESSAGE_HANDLE_VALID_4));
+        STRICT_EXPECTED_CALL(mocks, ConstMap_Destroy(IGNORED_PTR_ARG))
+            .IgnoreArgument(1);
+
+        STRICT_EXPECTED_CALL(mocks, ConstMap_GetValue(CONSTMAP_HANDLE_VALID_4, "source"));
+
+        STRICT_EXPECTED_CALL(mocks, ConstMap_GetValue(CONSTMAP_HANDLE_VALID_4, "deviceName"));
+
+        STRICT_EXPECTED_CALL(mocks, ConstMap_GetValue(CONSTMAP_HANDLE_VALID_4, "deviceKey"));
+
+        STRICT_EXPECTED_CALL(mocks, ConstMap_GetValue(CONSTMAP_HANDLE_VALID_4, "deviceToken"));
+
+        /*VECTOR_find_if incurs a STRING_c_str until it find the deviceName. One in this test*/
+        STRICT_EXPECTED_CALL(mocks, STRING_c_str(IGNORED_PTR_ARG))
+            .IgnoreArgument(1);
+
+        STRICT_EXPECTED_CALL(mocks, VECTOR_find_if(IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+            .IgnoreAllArguments();
+
+        STRICT_EXPECTED_CALL(mocks, STRING_c_str(IGNORED_PTR_ARG))
+            .IgnoreArgument(1);
+        STRICT_EXPECTED_CALL(mocks, VECTOR_erase(IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+            .IgnoreAllArguments();
+        STRICT_EXPECTED_CALL(mocks, STRING_delete(IGNORED_PTR_ARG))
+            .IgnoreArgument(1);
+        STRICT_EXPECTED_CALL(mocks, STRING_delete(IGNORED_PTR_ARG))
+            .IgnoreArgument(1);
+        STRICT_EXPECTED_CALL(mocks, IoTHubClient_Destroy(IGNORED_PTR_ARG))
+            .IgnoreArgument(1);
+
+
+        {/*separate scope for personality building*/
+         /* create a new PERSONALITY */
+            STRICT_EXPECTED_CALL(mocks, gballoc_malloc(IGNORED_NUM_ARG))
+                .IgnoreArgument(1);
+
+            /*making a copy of the deviceName*/
+            STRICT_EXPECTED_CALL(mocks, STRING_construct("secondDevice"));
+            /*making a copy of the deviceKey*/
+            STRICT_EXPECTED_CALL(mocks, STRING_construct("red"));
+
+            /*getting the stored IoTHubName*/
+            STRICT_EXPECTED_CALL(mocks, STRING_c_str(IGNORED_PTR_ARG))
+                .IgnoreArgument(1);
+            /*getting the stored IoTHubSuffix*/
+            STRICT_EXPECTED_CALL(mocks, STRING_c_str(IGNORED_PTR_ARG))
+                .IgnoreArgument(1);
+
+            /*creating the IOTHUB_CLIENT_HANDLE associated with the device*/
+            STRICT_EXPECTED_CALL(mocks, IoTHubClient_CreateWithTransport(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+                .IgnoreArgument(1)
+                .IgnoreArgument(2);
+
+            STRICT_EXPECTED_CALL(mocks, IoTHubClient_SetMessageCallback(IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+                .IgnoreArgument(1)
+                .IgnoreArgument(2)
+                .IgnoreArgument(3);
+        }
+
+        /*adding the personality to the VECTOR or personalities*/
+        STRICT_EXPECTED_CALL(mocks, VECTOR_push_back(IGNORED_PTR_ARG, IGNORED_PTR_ARG, 1))
+            .IgnoreArgument(1)
+            .IgnoreArgument(2);
+
+        /*getting the location of the personality in the VECTOR*/
+        STRICT_EXPECTED_CALL(mocks, VECTOR_back(IGNORED_PTR_ARG))
+            .IgnoreArgument(1);
+
+        { /*scope for creating the IOTHUBMESSAGE from GWMESSAGE*/
+
+          /*gettng the GW message content*/
+            STRICT_EXPECTED_CALL(mocks, Message_GetContent(MESSAGE_HANDLE_VALID_4));
+
+            /*creating a new IOTHUB_MESSAGE*/
+            STRICT_EXPECTED_CALL(mocks, IoTHubMessage_CreateFromByteArray(IGNORED_PTR_ARG, 0))
+                ;
+
+            /*every creation has its destruction - this one actually happens AFTER SendEventAsync*/
+            STRICT_EXPECTED_CALL(mocks, IoTHubMessage_Destroy(IGNORED_PTR_ARG))
+                .IgnoreArgument(1);
+
+            /*getting the IOTHUBMESSAGE properties*/
+            STRICT_EXPECTED_CALL(mocks, IoTHubMessage_Properties(IGNORED_PTR_ARG))
+                .IgnoreArgument(1);
+
+            /*getting the GW message properties*/
+            STRICT_EXPECTED_CALL(mocks, Message_GetProperties(IGNORED_PTR_ARG))
+                .IgnoreArgument(1);
+            STRICT_EXPECTED_CALL(mocks, ConstMap_Destroy(IGNORED_PTR_ARG))
+                .IgnoreArgument(1);
+
+            /*getting the GW keys and values*/
+            STRICT_EXPECTED_CALL(mocks, ConstMap_GetInternals(CONSTMAP_HANDLE_VALID_4, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+                .IgnoreArgument(2)
+                .IgnoreArgument(3)
+                .IgnoreArgument(4);
+
+            /*add "source"*/
+            STRICT_EXPECTED_CALL(mocks, Map_AddOrUpdate(IGNORED_PTR_ARG, "source", "mapping"))
+                .IgnoreArgument(1);
+        }
+
+        /*finally, send the message*/
+        STRICT_EXPECTED_CALL(mocks, IoTHubClient_SendEventAsync(IGNORED_PTR_ARG, IGNORED_PTR_ARG, NULL, NULL))
+            .IgnoreArgument(1)
+            .IgnoreArgument(2);
+
+        ///act
+        Module_Receive(module, MESSAGE_HANDLE_VALID_4);
+
+        ///assert
+        mocks.AssertActualAndExpectedCalls();
+
+        ///cleanup
+        Module_Destroy(module);
+
+    }
+
 
     /*Tests_SRS_IOTHUBMODULE_02_021: [ If `IoTHubClient_SendEventAsync` fails then `IotHub_Receive` shall return. ]*/
     TEST_FUNCTION(IotHub_Receive_when_IoTHubClient_SendEventAsync_fails_it_still_returns)

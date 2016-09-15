@@ -113,6 +113,7 @@ static MODULE_HANDLE IotHub_Create(BROKER_HANDLE broker, const void* configurati
                 	}
 	                else if (((const IOTHUB_CONFIG*)configuration)->MinimumPollingTime != 0 && HTTP_Protocol()->IoTHubTransport_SetOption(IoTHubTransport_GetLLTransport(result->transportHandle), "MinimumPollingTime", &((const IOTHUB_CONFIG*)configuration)->MinimumPollingTime) != IOTHUB_CLIENT_OK)
 	                {
+                        /*Codes_SRS_IOTHUBMODULE_20_001: [ If minimum polling time is not 0, `IoTHubHttp_Create` shall configure the http transport with the minimum polling time calling IoTHubTransport_SetOption on the transport provider] */
 	                    IoTHubTransport_Destroy(result->transportHandle);
 	                    VECTOR_destroy(result->personalities);
 	                    free(result);
@@ -388,6 +389,7 @@ static PERSONALITY* PERSONALITY_find_or_create(IOTHUB_HANDLE_DATA* moduleHandleD
     {
         result = *resultPtr;
 
+        /*Codes_SRS_IOTHUBMODULE_20_002: [ If an existing `PERSONALITY` has a device token, and it is different than the one passed, it shall be destroyed and a new one created]*/
         if (isToken && deviceKey && 0 != strcmp(STRING_c_str(result->deviceKey), deviceKey))
         {
             LogInfo("Renewing token for device %s", deviceName);
@@ -424,10 +426,6 @@ static PERSONALITY* PERSONALITY_find_or_create(IOTHUB_HANDLE_DATA* moduleHandleD
                 result = *resultPtr;
             }
         }
-    }
-    else
-    {
-        result = *resultPtr;
     }
     return result;
 }
@@ -547,7 +545,6 @@ static void IotHub_Receive(MODULE_HANDLE moduleHandle, MESSAGE_HANDLE messageHan
                 {
                     IOTHUB_HANDLE_DATA* moduleHandleData = moduleHandle;
                     /*Codes_SRS_IOTHUBMODULE_02_013: [ If no personality exists with a device ID equal to the value of the `deviceName` property of the message, then `IotHub_Receive` shall create a new `PERSONALITY` with the ID and key values from the message. ]*/
-                    /*Codes_SRS_IOTHUBMODULE_20_002: [If an existing `PERSONALITY` has a device token, and it is different than the one passed, it shall be destroyed and a new one created]*/
                     PERSONALITY* whereIsIt = PERSONALITY_find_or_create(moduleHandleData, deviceName, deviceKey, isToken);
                     if (whereIsIt == NULL)
                     {
