@@ -2,15 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 /** @file		module.h
-*	@brief		Interface for modules which connect to a message bus.
+*	@brief		Interface for modules which communicate with other modules via
+*               a message broker.
 *
-*	@details	Every module on the message bus must implement this interface.
-*				A module can only belong to 1 message bus and a message bus may
-*				have many modules connected to it.
+*	@details	Every module associated with the message broker must implement
+*               this interface.
+*				A module can only belong to one message broker; a message broker
+*               may have many modules associated with it.
 *
-*				A module is a pointer to a structure containing several function
-*				pointers. By convention, every module exports a function that 
-*				returns a pointer to an instance of the #MODULE_APIS structure..
+*               Every module library exports a function (Module_GetAPIs) that
+*               returns a pointer to the #MODULE_APIS structure.
 */
 
 #ifndef MODULE_H
@@ -22,7 +23,7 @@ typedef void* MODULE_HANDLE;
 typedef struct MODULE_APIS_TAG MODULE_APIS;
 
 #include "azure_c_shared_utility/macro_utils.h"
-#include "message_bus.h"
+#include "broker.h"
 #include "message.h"
 
 
@@ -33,87 +34,88 @@ extern "C"
 
 #ifdef UWP_BINDING
 
-	/** @brief	Interface containing module-specific implementations. */
+    /** @brief	Interface containing module-specific implementations. */
     class IInternalGatewayModule
     {
     public:
-		/** @brief Interface equivalent to #Module_Receive function. */
+        /** @brief Interface equivalent to #Module_Receive function. */
         virtual void Module_Receive(MESSAGE_HANDLE messageHandle) = 0;
     };
 
-#endif // UWP_BINDING
-
-	/** @brief	Structure used to represent/abstract the idea of a module.  May
-	*			contain Hamdle/FxnPtrs or an interface ptr or some unforseen
-	*			representation.
-	*/
     typedef struct MODULE_TAG
     {
-#ifdef UWP_BINDING
-		/** @brief Interface implementation for module. */
-		IInternalGatewayModule* module_instance;
-#else
-		/** @brief Struct containing function pointers */
-		const MODULE_APIS* module_apis;
-		/** @brief HANDLE for module. */
-		MODULE_HANDLE module_handle;
-#endif // UWP_BINDING
+        /** @brief Interface implementation for module. */
+        IInternalGatewayModule* module_instance;
     }MODULE;
 
-	/** @brief		Creates a module using the specified configuration connecting
-	*				to the specified message bus.
-	*
-	*	@details	This function is to be implemented by the module creator.
-	*
-	*	@param		busHandle		The #MESSAGE_BUS_HANDLE onto which this module
-	*								will connect.
-	*	@param		configureation	A pointer to the user-defined configuration 
-	*								structure for this module.
-	*
-	*	@return		A non-NULL #MODULE_HANDLE upon success, or @c NULL upon 
-	*			failure.
-	*/
-    typedef MODULE_HANDLE(*pfModule_Create)(MESSAGE_BUS_HANDLE busHandle, const void* configuration);
+#else
 
-	/** @brief		Disposes of the resources allocated by/for this module.
-	*
-	*	@details	This function is to be implemented by the module creator.
-	*
-	*	@param		moduleHandle	The #MODULE_HANDLE of the module to be destroyed.
-	*/
+    /** @brief	Structure used to represent/abstract the idea of a module.  May
+    *			contain Hamdle/FxnPtrs or an interface ptr or some unforseen
+    *			representation.
+    */
+    typedef struct MODULE_TAG
+    {
+        /** @brief Struct containing function pointers */
+        const MODULE_APIS* module_apis;
+        /** @brief HANDLE for module. */
+        MODULE_HANDLE module_handle;
+    }MODULE;
+
+    /** @brief		Creates a module using the specified configuration connecting
+    *				to the specified message broker.
+    *
+    *	@details	This function is to be implemented by the module creator.
+    *
+    *	@param		broker		The #BROKER_HANDLE onto which this module
+    *								will connect.
+    *	@param		configureation	A pointer to the user-defined configuration 
+    *								structure for this module.
+    *
+    *	@return		A non-NULL #MODULE_HANDLE upon success, or @c NULL upon 
+    *			failure.
+    */
+    typedef MODULE_HANDLE(*pfModule_Create)(BROKER_HANDLE broker, const void* configuration);
+
+    /** @brief		Disposes of the resources allocated by/for this module.
+    *
+    *	@details	This function is to be implemented by the module creator.
+    *
+    *	@param		moduleHandle	The #MODULE_HANDLE of the module to be destroyed.
+    */
     typedef void(*pfModule_Destroy)(MODULE_HANDLE moduleHandle);
 
-	/** @brief		The module's callback function that is called upon message 
-	*				receipt.
-	*
-	*	@details	This function is to be implemented by the module creator.
-	*
-	*	@param		moduleHandle	The #MODULE_HANDLE of the module receiving the
-	*								message.
-	*	@param		messageHandle	The #MESSAGE_HANDLE of the message being sent
-	*								to the module.
-	*/
-	typedef void(*pfModule_Receive)(MODULE_HANDLE moduleHandle, MESSAGE_HANDLE messageHandle);
+    /** @brief		The module's callback function that is called upon message 
+    *				receipt.
+    *
+    *	@details	This function is to be implemented by the module creator.
+    *
+    *	@param		moduleHandle	The #MODULE_HANDLE of the module receiving the
+    *								message.
+    *	@param		messageHandle	The #MESSAGE_HANDLE of the message being sent
+    *								to the module.
+    */
+    typedef void(*pfModule_Receive)(MODULE_HANDLE moduleHandle, MESSAGE_HANDLE messageHandle);
 
-	/** @brief	Structure returned by ::Module_GetAPIS containing the function
-	*			pointers of the module-specific implementations of the interface.
-	*/
+    /** @brief	Structure returned by ::Module_GetAPIS containing the function
+    *			pointers of the module-specific implementations of the interface.
+    */
     typedef struct MODULE_APIS_TAG
     {
-		/** @brief Function pointer to the #Module_Create function. */
+        /** @brief Function pointer to the #Module_Create function. */
         pfModule_Create Module_Create;
 
-		/** @brief Function pointer to the #Module_Destroy function. */
+        /** @brief Function pointer to the #Module_Destroy function. */
         pfModule_Destroy Module_Destroy;
 
-		/** @brief Function pointer to the #Module_Receive function. */
+        /** @brief Function pointer to the #Module_Receive function. */
         pfModule_Receive Module_Receive;
     }MODULE_APIS;
 
-	/** @brief	This is the only function exported by a module. Using the
-	*			exported function, the caller learns the functions for the 
-	*			particular module.
-	*/
+    /** @brief	This is the only function exported by a module. Using the
+    *			exported function, the caller learns the functions for the 
+    *			particular module.
+    */
     typedef const MODULE_APIS* (*pfModule_GetAPIS)(void);
 
     /** @brief Returns the module APIS name.*/
@@ -135,6 +137,7 @@ extern "C"
 *			the functions for the particular module.
 */
 MODULE_EXPORT const MODULE_APIS* Module_GetAPIS(void);
+#endif // UWP_BINDING
 
 #ifdef __cplusplus
 }

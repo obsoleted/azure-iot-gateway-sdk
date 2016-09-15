@@ -4,8 +4,8 @@
 /** @file		message.h
 *
 *	@brief		Defines structures and function prototypes for creating, 
-*				inspecting and disposing off messages published on to the 
-*				message bus.
+*				inspecting and disposing of messages published to the 
+*				message broker.
 *
 *	@details	A message essentially has two components:
 *					- Properties represented as key/value pairs where both the
@@ -116,16 +116,19 @@ extern MESSAGE_HANDLE Message_CreateFromByteArray(const unsigned char* source, i
 /** @brief		Creates a byte array representation of a MESSAGE_HANDLE. 
 *
 *	@details	The byte array created can be used with function #Message_CreateFromByteArray
-*               to reproduce the message. The returned byte array needs to be deallocated by free function.
+*               to reproduce the message. If buffer is not set, this function will return the 
+*				serialization size.
 *
 *	@param		messageHandle		A #MESSAGE_HANDLE. This parameter cannot be NULL.
-*   @param      size                pointer to a int32_t that will receive the size of the byte array
+*	@param		buf					A pointer to a byte array in memory, may be NULL.
+*   @param      size                An int32_t that specifies the size of buf.
 *
-*	@return		A non-NULL const unsigned char* is returned when creating the serialized form succeeds. *size is updated to the size of the array
-*               A NULL value is returned when the array cannot be created.
+*	@return		An int32_t that specifies the size of the serialized message
+*               written when "buf" is not NULL. If "buf" is NULL, returns the 
+*               size required for a full successful serialization. Returns a 
+*               negative value when an error occurs.
 */
-extern const unsigned char* Message_ToByteArray(MESSAGE_HANDLE messageHandle, int32_t* size);
-
+extern int32_t Message_ToByteArray(MESSAGE_HANDLE messageHandle, unsigned char* buf, int32_t size);
 
 /** @brief		Creates a new message from a @c CONSTBUFFER source and @c MAP_HANDLE.
 *
@@ -194,9 +197,9 @@ extern const CONSTBUFFER* Message_GetContent(MESSAGE_HANDLE message);
 */
 extern CONSTBUFFER_HANDLE Message_GetContentHandle(MESSAGE_HANDLE message);
 
-/** @brief Disposes of resources allocated by the message.
-*
-*	@param message		The #MESSAGE_HANDLE to be destroyed.
+/** @brief      Disposes of resources allocated by the message.
+*       
+*	@param      message		The #MESSAGE_HANDLE to be destroyed.
 */
 extern void Message_Destroy(MESSAGE_HANDLE message);
 

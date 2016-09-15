@@ -12,12 +12,10 @@ namespace PrinterModule
 {
     public class DotNetPrinterModule : IGatewayModule
     {
-        private MessageBus busToPublish;
         private string configuration;
-        public void Create(MessageBus bus, string configuration)
+        public void Create(Broker broker, byte[] configuration)
         {
-            this.busToPublish = bus;
-            this.configuration = configuration;
+            this.configuration = System.Text.Encoding.UTF8.GetString(configuration);
         }
 
         public void Destroy()

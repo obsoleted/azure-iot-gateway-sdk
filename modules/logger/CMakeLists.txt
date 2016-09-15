@@ -1,7 +1,6 @@
 #Copyright (c) Microsoft. All rights reserved.
 #Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#this is CMakeLists.txt for the logger module
 cmake_minimum_required(VERSION 2.8.11)
 
 set(logger_sources
@@ -45,7 +44,7 @@ add_library(logger MODULE ${logger_sources}  ${logger_headers})
 target_link_libraries(logger gateway)
 
 #this builds the Logger static library
-add_library(logger_static  ${logger_static_sources} ${logger_static_headers})
+add_library(logger_static STATIC ${logger_static_sources} ${logger_static_headers})
 target_compile_definitions(logger_static PRIVATE BUILD_MODULE_TYPE_STATIC)
 target_link_libraries(logger_static gateway)
 
@@ -54,7 +53,7 @@ add_library(logger_hl MODULE ${logger_hl_sources} ${logger_hl_headers})
 target_link_libraries(logger_hl logger_static gateway)
 
 #this builds the Logger_HL static library (by default it uses Logger linked statically)
-add_library(logger_hl_static ${logger_hl_static_sources} ${logger_hl_static_headers})
+add_library(logger_hl_static STATIC ${logger_hl_static_sources} ${logger_hl_static_headers})
 target_compile_definitions(logger_hl_static PRIVATE BUILD_MODULE_TYPE_STATIC)
 target_link_libraries(logger_hl_static logger_static gateway)
 

@@ -43,13 +43,15 @@ A module publishes a message to the broker via the `Broker_Publish` function. Th
 
 ![](./media/messages_1.png)
 
-Today we have 2 ways of filtering the message. First is by passing a set of routing to the broker, so the broker knows the output and input of each module. The Second is by the module filtering its properties. A module should only act upon a message if the message is intended for it. This message filtering is what effectively creates a message pipeline.
+###Message routing and filtering
+
+Today we have 2 ways of directing the message to the correct modules. First is by passing a set of links to the broker, so the broker knows the source and sink for each module. Second is by the module filtering its properties. A module should only act upon a message if the message is intended for it. The links and this message filtering is what effectively creates a message pipeline.
 
 This is enough background to actually start discussing the Hello World sample.
 
 ##Hello World sample architecture
 
-Before diving into the details of filtering messages based on properties or routing, first think of the Hello World sample simply in terms of modules. The sample is made up of a pipeline of two modules:
+Before diving into the details of filtering messages based on properties or links, first think of the Hello World sample simply in terms of modules. The sample is made up of a pipeline of two modules:
 -	A "hello world" module
 -	A logger module
 
@@ -137,11 +139,11 @@ This is an example of a JSON settings file for Linux that will write to `log.txt
 			"args" : null
         }
     ],
-    "routes": 
+    "links": 
     [
         {
-            "output": "hello_world",
-            "input": "logger"
+            "source": "hello_world",
+            "sink": "logger_hl"
         }
     ]
 }
@@ -181,11 +183,11 @@ This is an example of a JSON settings file for Windows. that will write to `log.
 			"args" : null
         }
     ],
-    "routes": 
+    "links": 
     [
         {
-            "output": "hello_world",
-            "input": "logger"
+            "source": "hello_world",
+            "sink": "logger_hl"
         }
     ]
 }
@@ -235,7 +237,7 @@ Below is an example of typical output that is written to the log file when the H
 
 The gateway process needs to be written by the developer. This a program which creates internal infrastructure (e.g. the broker), loads the correct modules, and sets everything up to function correctly. The SDK provides the `Gateway_Create_From_JSON` function which allows developers to bootstrap a gateway from a JSON file.
 
-`Gateway_Create_FromJSON` deals with creating internal infrastructure (e.g. the broker), loading modules, and setting everything up to function correctly. All the developer needs to do is provide this function with the path to a JSON file specifying what modules they want loaded and routes to guide the broker to send messages to the correct module. 
+`Gateway_Create_FromJSON` deals with creating internal infrastructure (e.g. the broker), loading modules, and setting everything up to function correctly. All the developer needs to do is provide this function with the path to a JSON file specifying what modules they want loaded and links to guide the broker to send messages to the correct module. 
 
 The code for the Hello World sample's gateway process is contained in [`samples/hello_world/main.c`](../samples/hello_world/src/main.c) A slightly abbreviated version of that code is copied below. This very short program just creates a gateway and then waits for the ENTER key to be pressed before it tears down the gateway. 
 
@@ -263,11 +265,13 @@ The JSON file specifying the modules to be loaded is quite simple. It contains a
 - `module path` – the path to the library containing the module. For Linux this will be a .so while on Windows this will be a .dll file
 - `args` – any arguments/configuration the module needs. Specifically, they are really another json value which is passed (as string) to the Module's `_Create` function.
 
-The JSON file also contain the routes that is going to be passed to the broker.
-- `output` - a module name from the list of modules described on the `modules` that will produce data to the next `input` tag on JSON File 
-- `input` - a module name from the list of modules described on the `modules` JSON that will consume messages described on the previous `output` 
+The JSON file also contains the links that are going to be passed to the broker. A link has two properties:
+- `source` - a module name from the `modules` section, or "\*".  
+- `sink` - a module name from the `modules` section.
 
-On the sample copied below you can see that every message procuded by module `hello_world` will be consumed by module `logger`.
+Each link defines a message route and direction. Messages from module `source` are to be delivered to the module `sink`. The `source` may be set to "\*", indicating that messages from any module will be received by `sink`.
+
+On the sample copied below you can see that every message produced by module `hello_world` will be consumed by module `logger`. 
 
 The JSON below is the code from one of the JSON files (hello_world_lin.json)[(../samples/hello_world/src/hello_world_lin.json) used to configure the Hello World sample. There are a couple things to note:
 
@@ -289,11 +293,11 @@ The JSON below is the code from one of the JSON files (hello_world_lin.json)[(..
 			"args" : null
         }
     ],
-    "routes": 
+    "links": 
     [
         {
-            "output": "hello_world",
-            "input": "logger"
+            "source": "hello_world",
+            "sink": "logger_hl"
         }
     ]
 }

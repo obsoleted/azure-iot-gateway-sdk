@@ -11,7 +11,7 @@ extern "C"
 {
 #endif
 
-MODULE_EXPORT const MODULE_APIS* MODULE_STATIC_GETAPIS(BLE_HL)(void);
+MODULE_EXPORT const MODULE_APIS* MODULE_STATIC_GETAPIS(BLE_MODULE_HL)(void);
 
 #ifdef __cplusplus
 }

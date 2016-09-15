@@ -25,6 +25,10 @@ add_dependencies(dotnet_binding_sample dotnet_hl logger_hl)
 target_link_libraries(dotnet_binding_sample gateway)
 linkSharedUtil(dotnet_binding_sample)
 install_broker(dotnet_binding_sample ${CMAKE_CURRENT_BINARY_DIR}/$(Configuration) )
+install_binaries(dotnet_binding_sample ${CMAKE_CURRENT_BINARY_DIR}/$(Configuration) ${dotnet_managed_binding_dll} )
+install_binaries(dotnet_binding_sample ${CMAKE_CURRENT_BINARY_DIR}/$(Configuration) ${dotnet_host_binding_dll} )
+install_binaries(dotnet_binding_sample ${CMAKE_CURRENT_BINARY_DIR}/$(Configuration) ${dotnet_sensor_module_dll} )
+install_binaries(dotnet_binding_sample ${CMAKE_CURRENT_BINARY_DIR}/$(Configuration) ${dotnet_printer_module_dll} )
 
 
 add_sample_to_solution(dotnet_binding_sample)

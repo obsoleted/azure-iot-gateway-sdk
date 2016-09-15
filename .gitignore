@@ -15,6 +15,7 @@
 
 # Build results
 
+build/
 [Dd]ebug/
 [Rr]elease/
 x64/
@@ -120,7 +121,6 @@ ClientBin/
 *~
 *.dbmdl
 *.[Pp]ublish.xml
-*.pfx
 *.publishsettings
 
 # RIA/Silverlight projects

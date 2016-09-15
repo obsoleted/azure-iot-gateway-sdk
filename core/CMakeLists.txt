@@ -1,4 +1,6 @@
-#this is CMakeLists.txt for the gateway core
+#Copyright (c) Microsoft. All rights reserved.
+#Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 cmake_minimum_required(VERSION 2.8.11)
 
 add_subdirectory(deps)
@@ -48,6 +50,7 @@ endfunction(includeHttp)
 set(gateway_c_sources
     ./src/message.c
     ./src/module_loader.c
+    ./src/internal/event_system.c
     ./src/gateway_ll.c
     ./src/gateway.c
     ${dynamic_library_c_file}
@@ -56,18 +59,21 @@ set(gateway_c_sources
 
 set(gateway_h_sources
     ./inc/message.h
-    ./inc/message_bus.h
+    ./inc/broker.h
     ./inc/module.h
+    ./inc/internal/event_system.h
     ./inc/gateway_ll.h
     ./inc/gateway.h
     ./inc/module_loader.h
     ./inc/dynamic_library.h
 )
 
-if (${default_broker})
-    set(gateway_c_sources ${gateway_c_sources} ./src/message_bus.c)
-else()
-    set(gateway_c_sources ${gateway_c_sources} ./src/message_bus_broadcast.c)
+if (GW_BROKER_TYPE STREQUAL "PubSub")
+    set(gateway_c_sources ${gateway_c_sources} ./src/broker.c)
+endif()
+
+if (GW_BROKER_TYPE STREQUAL "Broadcast")
+    set(gateway_c_sources ${gateway_c_sources} ./src/broadcast_broker.c)
 endif()
 
 include_directories(./inc)
@@ -86,7 +92,7 @@ else()
     target_link_libraries(gateway uuid)
 endif()
 
-target_link_libraries(gateway aziotsharedutil parson ${dynamic_loader_library} )
+target_link_libraries(gateway aziotsharedutil parson ${dynamic_loader_library})
 link_broker(gateway)
 #this adds the tests to the build process
 

@@ -34,8 +34,8 @@ rem ----------------------------------------------------------------------------
 
 rem // default build options
 set build-clean=0
-set build-config=Release
-set build-platform="Any CPU"
+set build-config=Debug
+set build-platform=x86
 
 :args-loop
 if "%1" equ "" goto args-done
@@ -85,7 +85,7 @@ if not !errorlevel!==0 exit /b !errorlevel!
 
 rem ------------------
 rem -- run unit tests
-call  mstest /testcontainer:"%build-root%\bindings\dotnet\dotnet-binding\Microsoft.Azure.IoT.Gateway.Test\bin\%build-config%\Microsoft.Azure.IoT.Gateway.Test.dll"
+call  vstest.console "%build-root%\bindings\dotnet\dotnet-binding\Microsoft.Azure.IoT.Gateway.Test\bin\%build-platform%\%build-config%\Microsoft.Azure.IoT.Gateway.Test.dll" /Platform:%build-platform% /inIsolation
 if not !errorlevel!==0 exit /b !errorlevel!
 rem ------------------
 
@@ -113,7 +113,7 @@ echo build.cmd [options]
 echo options:
 echo  -c, --clean           delete artifacts from previous build before building
 echo  --config ^<value^>      [Debug] build configuration (e.g. Debug, Release)
-echo  --platform ^<value^>    [Win32] build platform (e.g. Win32, x64, ...)
+echo  --platform ^<value^>    [x86] build platform (e.g. x86, x64, ...)
 goto :eof
 
 rem -----------------------------------------------------------------------------
