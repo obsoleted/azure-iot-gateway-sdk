@@ -119,11 +119,11 @@ static MODULE_HANDLE IotHub_Create(BROKER_HANDLE broker, const void* configurati
 	                    result = NULL;
 	                    LogError("IoTHubTransportHttp_SetOption returned Error");
 	                }
-	                else 
-	                {
-	                    result->transportHandle = NULL;
-	                }
 				}
+                else
+                {
+                    result->transportHandle = NULL;
+                }
 
                 if (result != NULL)
                 {
