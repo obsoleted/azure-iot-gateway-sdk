@@ -111,7 +111,7 @@ static MODULE_HANDLE IotHub_Create(BROKER_HANDLE broker, const void* configurati
                         result = NULL;
                         LogError("VECTOR_create returned NULL");
                 	}
-	                else if (((const IOTHUBHTTP_CONFIG*)configuration)->MinimumPollingTime != 0 && HTTP_Protocol()->IoTHubTransport_SetOption(IoTHubTransport_GetLLTransport(result->transportHandle), "MinimumPollingTime", &((const IOTHUBHTTP_CONFIG*)configuration)->MinimumPollingTime) != IOTHUB_CLIENT_OK)
+	                else if (((const IOTHUB_CONFIG*)configuration)->MinimumPollingTime != 0 && HTTP_Protocol()->IoTHubTransport_SetOption(IoTHubTransport_GetLLTransport(result->transportHandle), "MinimumPollingTime", &((const IOTHUB_CONFIG*)configuration)->MinimumPollingTime) != IOTHUB_CLIENT_OK)
 	                {
 	                    IoTHubTransport_Destroy(result->transportHandle);
 	                    VECTOR_destroy(result->personalities);

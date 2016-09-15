@@ -102,7 +102,7 @@ static const char * IotHub_Receive_message_content;
 static size_t IotHub_Receive_message_size;
 
 static TRANSPORT_LL_HANDLE TRANSPORT_LL_HANDLE_VALID_1 = ((TRANSPORT_LL_HANDLE)(111));
-extern "C" const TRANSPORT_PROVIDER* HTTP_Protocol(void) { return NULL; }
+extern "C" const TRANSPORT_PROVIDER* HTTP_Protocol(void);
 extern "C" const TRANSPORT_PROVIDER* AMQP_Protocol(void) { return NULL; }
 extern "C" const TRANSPORT_PROVIDER* MQTT_Protocol(void) { return NULL; }
 extern "C" const TRANSPORT_PROVIDER* ABCD_Protocol(void) { return NULL; }
@@ -154,12 +154,13 @@ static pfModule_Create Module_Create = NULL; /*gets assigned in TEST_SUITE_INITI
 static pfModule_Destroy Module_Destroy = NULL; /*gets assigned in TEST_SUITE_INITIALIZE*/
 static pfModule_Receive Module_Receive = NULL; /*gets assigned in TEST_SUITE_INITIALIZE*/
 
-static const IOTHUB_CONFIG config_with_NULL_IoTHubName = {NULL, "devices.azure.com", HTTP_Protocol };
-static const IOTHUB_CONFIG config_with_NULL_IoTHubSuffix = { "theIoTHub42", NULL, HTTP_Protocol };
-static const IOTHUB_CONFIG config_with_invalid_transport = { "theIoTHub42", "theAwesomeSuffix.com", (IOTHUB_CLIENT_TRANSPORT_PROVIDER)0x42 };
-static const IOTHUB_CONFIG config_valid = { "theIoTHub42", "theAwesomeSuffix.com", HTTP_Protocol };
-static const IOTHUB_CONFIG config_valid_AMQP = { "theIoTHub42", "theAwesomeSuffix.com", AMQP_Protocol };
-static const IOTHUB_CONFIG config_valid_MQTT = { "theIoTHub42", "theAwesomeSuffix.com", MQTT_Protocol };
+static const IOTHUB_CONFIG config_with_NULL_IoTHubName = {NULL, "devices.azure.com", HTTP_Protocol, 0 };
+static const IOTHUB_CONFIG config_with_NULL_IoTHubSuffix = { "theIoTHub42", NULL, HTTP_Protocol, 0 };
+static const IOTHUB_CONFIG config_with_invalid_transport = { "theIoTHub42", "theAwesomeSuffix.com", (IOTHUB_CLIENT_TRANSPORT_PROVIDER)0x42, 0 };
+static const IOTHUB_CONFIG config_valid = { "theIoTHub42", "theAwesomeSuffix.com", HTTP_Protocol, 0 };
+static const IOTHUB_CONFIG config_valid_AMQP = { "theIoTHub42", "theAwesomeSuffix.com", AMQP_Protocol, 0 };
+static const IOTHUB_CONFIG config_valid_MQTT = { "theIoTHub42", "theAwesomeSuffix.com", MQTT_Protocol, 0 };
+static const IOTHUB_CONFIG config_valid_nonzero_MinimumPollTime = { "theIoTHub42", "theAwesomeSuffix.com", HTTP_Protocol, 1 };
 
 
 TYPED_MOCK_CLASS(IotHubMocks, CGlobalMock)
@@ -606,7 +607,7 @@ DECLARE_GLOBAL_MOCK_METHOD_1(IotHubMocks, , VECTOR_HANDLE, VECTOR_create, size_t
 DECLARE_GLOBAL_MOCK_METHOD_3(IotHubMocks, , int, VECTOR_push_back, VECTOR_HANDLE, handle, const void*, elements, size_t, numElements)
 DECLARE_GLOBAL_MOCK_METHOD_2(IotHubMocks, , void*, VECTOR_element, VECTOR_HANDLE, handle, size_t, index)
 DECLARE_GLOBAL_MOCK_METHOD_3(IotHubMocks, , void*, VECTOR_find_if, VECTOR_HANDLE, handle, PREDICATE_FUNCTION, pred, const void*, value)
-DECLARE_GLOBAL_MOCK_METHOD_3(CIoTHubHTTPMocks, , void, VECTOR_erase, VECTOR_HANDLE, handle, void*, elements, size_t, numElements)
+DECLARE_GLOBAL_MOCK_METHOD_3(IotHubMocks, , void, VECTOR_erase, VECTOR_HANDLE, handle, void*, elements, size_t, numElements)
 DECLARE_GLOBAL_MOCK_METHOD_1(IotHubMocks, , size_t, VECTOR_size, VECTOR_HANDLE, handle)
 DECLARE_GLOBAL_MOCK_METHOD_1(IotHubMocks, , void, VECTOR_destroy, VECTOR_HANDLE, handle)
 DECLARE_GLOBAL_MOCK_METHOD_1(IotHubMocks, , void, STRING_delete, STRING_HANDLE, s);
@@ -625,7 +626,7 @@ DECLARE_GLOBAL_MOCK_METHOD_2(IotHubMocks, , const char*, ConstMap_GetValue, CONS
 DECLARE_GLOBAL_MOCK_METHOD_3(IotHubMocks, , MAP_RESULT, Map_AddOrUpdate, MAP_HANDLE, handle, const char*, key, const char*, value);
 DECLARE_GLOBAL_MOCK_METHOD_3(IotHubMocks, , MAP_RESULT, Map_Add, MAP_HANDLE, handle, const char*, key, const char*, value);
 DECLARE_GLOBAL_MOCK_METHOD_4(IotHubMocks, , CONSTMAP_RESULT, ConstMap_GetInternals, CONSTMAP_HANDLE, handle, const char*const**, keys, const char*const**, values, size_t*, count)
-DECLARE_GLOBAL_MOCK_METHOD_4(IotHubMocks, ,IOTHUB_CLIENT_RESULT, IoTHubClient_SendEventAsync, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, IOTHUB_MESSAGE_HANDLE, eventMessageHandle, IOTHUB_CLIENT_EVENT_CONFIRMATION_CALLBACK, eventConfirmationCallback, void*, userContextCallback)
+DECLARE_GLOBAL_MOCK_METHOD_4(IotHubMocks, , IOTHUB_CLIENT_RESULT, IoTHubClient_SendEventAsync, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, IOTHUB_MESSAGE_HANDLE, eventMessageHandle, IOTHUB_CLIENT_EVENT_CONFIRMATION_CALLBACK, eventConfirmationCallback, void*, userContextCallback)
 DECLARE_GLOBAL_MOCK_METHOD_3(IotHubMocks, , IOTHUB_CLIENT_RESULT, IoTHubClient_SetMessageCallback, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, IOTHUB_CLIENT_MESSAGE_CALLBACK_ASYNC, messageCallback, void*, userContextCallback)
 DECLARE_GLOBAL_MOCK_METHOD_1(IotHubMocks, , const CONSTBUFFER *, Message_GetContent, MESSAGE_HANDLE, message)
 DECLARE_GLOBAL_MOCK_METHOD_1(IotHubMocks, , void, IoTHubMessage_Destroy, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle)
@@ -636,9 +637,9 @@ DECLARE_GLOBAL_MOCK_METHOD_1(IotHubMocks, , const char*, IoTHubMessage_GetString
 DECLARE_GLOBAL_MOCK_METHOD_1(IotHubMocks, , IOTHUBMESSAGE_CONTENT_TYPE, IoTHubMessage_GetContentType, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle)
 DECLARE_GLOBAL_MOCK_METHOD_1(IotHubMocks, , void*, VECTOR_back, VECTOR_HANDLE, handle)
 DECLARE_GLOBAL_MOCK_METHOD_3(IotHubMocks, , TRANSPORT_HANDLE, IoTHubTransport_Create, IOTHUB_CLIENT_TRANSPORT_PROVIDER, protocol, const char*, iotHubName, const char*, iotHubSuffix)
-DECLARE_GLOBAL_MOCK_METHOD_1(CIoTHubHTTPMocks, , TRANSPORT_LL_HANDLE, IoTHubTransport_GetLLTransport, TRANSPORT_HANDLE, transportHlHandle)
+DECLARE_GLOBAL_MOCK_METHOD_1(IotHubMocks, , TRANSPORT_LL_HANDLE, IoTHubTransport_GetLLTransport, TRANSPORT_HANDLE, transportHlHandle)
 DECLARE_GLOBAL_MOCK_METHOD_1(IotHubMocks, , void, IoTHubTransport_Destroy, TRANSPORT_HANDLE, transportHlHandle)
-DECLARE_GLOBAL_MOCK_METHOD_3(CIoTHubHTTPMocks, , IOTHUB_CLIENT_RESULT, IoTHubTransport_SetOptionFunc, TRANSPORT_LL_HANDLE, handle, const char *, optionName, const void*, value)
+DECLARE_GLOBAL_MOCK_METHOD_3(IotHubMocks, , IOTHUB_CLIENT_RESULT, IoTHubTransport_SetOptionFunc, TRANSPORT_LL_HANDLE, handle, const char *, optionName, const void*, value)
 DECLARE_GLOBAL_MOCK_METHOD_3(IotHubMocks, , BROKER_RESULT, Broker_Publish, BROKER_HANDLE, broker, MODULE_HANDLE, source, MESSAGE_HANDLE, message)
 
 
@@ -919,7 +920,7 @@ BEGIN_TEST_SUITE(iothub_ut)
             .IgnoreAllArguments();
 
         ///act
-        auto module = Module_Create(MESSAGE_BUS_HANDLE_VALID, &config_valid_nonzero_MinimumPollTime);
+        auto module = Module_Create(BROKER_HANDLE_VALID, &config_valid_nonzero_MinimumPollTime);
 
         ///assert
         ASSERT_IS_NOT_NULL(module);
@@ -958,7 +959,7 @@ BEGIN_TEST_SUITE(iothub_ut)
             .IgnoreArgument(1);
 
         ///act
-        auto module = Module_Create(MESSAGE_BUS_HANDLE_VALID, &config_valid_nonzero_MinimumPollTime);
+        auto module = Module_Create(BROKER_HANDLE_VALID, &config_valid_nonzero_MinimumPollTime);
 
         ///assert
         ASSERT_IS_NULL(module);

@@ -536,7 +536,7 @@ TEST_FUNCTION(IoTHub_HL_Create_MinimumPollingTime_not_found_succeeds)
     ///arrange
     IotHubHLMocks mocks;
     const char * validJsonString = "calling it valid makes it so";
-    MESSAGE_BUS_HANDLE busHandle = (MESSAGE_BUS_HANDLE)0x42;
+    BROKER_HANDLE broker = (BROKER_HANDLE)0x42;
 
     STRICT_EXPECTED_CALL(mocks, json_parse_string(validJsonString));
     STRICT_EXPECTED_CALL(mocks, json_value_get_object(IGNORED_PTR_ARG))
@@ -551,14 +551,14 @@ TEST_FUNCTION(IoTHub_HL_Create_MinimumPollingTime_not_found_succeeds)
     STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "MinimumPollingTime"))
         .IgnoreArgument(1)
         .SetFailReturn((const char *)NULL);
-    STRICT_EXPECTED_CALL(mocks, MODULE_STATIC_GETAPIS(IOTHUBHTTP_MODULE)());
-    STRICT_EXPECTED_CALL(mocks, IoTHubHttp_Create(busHandle, IGNORED_PTR_ARG))
+    STRICT_EXPECTED_CALL(mocks, MODULE_STATIC_GETAPIS(IOTHUB_MODULE)());
+    STRICT_EXPECTED_CALL(mocks, IotHub_Create(broker, IGNORED_PTR_ARG))
         .IgnoreArgument(2);
     STRICT_EXPECTED_CALL(mocks, json_value_free(IGNORED_PTR_ARG))
         .IgnoreArgument(1);
 
     ///act
-    auto result = Module_Create(busHandle, validJsonString);
+    auto result = Module_Create(broker, validJsonString);
     ///assert
 
     ASSERT_IS_NOT_NULL(result);
