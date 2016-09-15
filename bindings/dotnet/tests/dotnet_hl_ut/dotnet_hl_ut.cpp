@@ -339,6 +339,10 @@ public:
         double result2 = 0;
     MOCK_METHOD_END(double, result2);
 
+    MOCK_STATIC_METHOD_1(, char*, json_serialize_to_string, const JSON_Value*, value)
+        char* string = (char*)malloc(14);
+    MOCK_METHOD_END(char*, string);
+
     MOCK_STATIC_METHOD_2(, JSON_Object*, json_array_get_object, const JSON_Array*, arr, size_t, index)
         JSON_Object* object = NULL;
         if (arr != NULL && index >= 0)
@@ -413,6 +417,8 @@ public:
 
 DECLARE_GLOBAL_MOCK_METHOD_1(CDOTNETHLMocks, , JSON_Value*, json_parse_string, const char *, filename);
 DECLARE_GLOBAL_MOCK_METHOD_1(CDOTNETHLMocks, , JSON_Object*, json_value_get_object, const JSON_Value*, value);
+DECLARE_GLOBAL_MOCK_METHOD_2(CDOTNETHLMocks, , JSON_Value*, json_object_get_value, const JSON_Object*, object, const char*, name);
+DECLARE_GLOBAL_MOCK_METHOD_1(CDOTNETHLMocks, , char*, json_serialize_to_string, const JSON_Value*, value);
 DECLARE_GLOBAL_MOCK_METHOD_2(CDOTNETHLMocks, , double, json_object_get_number, const JSON_Object*, value, const char*, name);
 DECLARE_GLOBAL_MOCK_METHOD_2(CDOTNETHLMocks, , const char*, json_object_get_string, const JSON_Object*, object, const char*, name);
 DECLARE_GLOBAL_MOCK_METHOD_2(CDOTNETHLMocks, , JSON_Array*, json_object_get_array, const JSON_Object*, object, const char*, name);
@@ -612,9 +618,13 @@ BEGIN_TEST_SUITE(dotnet_hl_ut)
 		STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "dotnet_module_entry_class"))
 		.IgnoreArgument(1);
 
-		STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "dotnet_module_args"))
-			.IgnoreArgument(1)
-			.SetFailReturn((const char*)NULL);
+        STRICT_EXPECTED_CALL(mocks, json_object_get_value(IGNORED_PTR_ARG, "dotnet_module_args"))
+            .IgnoreArgument(1)
+            .SetFailReturn((JSON_Value*)NULL);
+
+        STRICT_EXPECTED_CALL(mocks, json_serialize_to_string(IGNORED_PTR_ARG))
+            .IgnoreArgument(1)
+            .SetFailReturn((char*)NULL);
 
 		///act
 		auto result = DotNET_HL_Create((BROKER_HANDLE)0x42, (const void*)FAKE_CONFIG);
@@ -645,14 +655,20 @@ BEGIN_TEST_SUITE(dotnet_hl_ut)
 		STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "dotnet_module_entry_class"))
 			.IgnoreArgument(1);
 
-		STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "dotnet_module_args"))
-			.IgnoreArgument(1);
+        STRICT_EXPECTED_CALL(mocks, json_object_get_value(IGNORED_PTR_ARG, "dotnet_module_args"))
+            .IgnoreArgument(1);
+
+        STRICT_EXPECTED_CALL(mocks, json_serialize_to_string(IGNORED_PTR_ARG))
+            .IgnoreArgument(1);
 
 		STRICT_EXPECTED_CALL(mocks, MODULE_STATIC_GETAPIS(DOTNET_HOST)());
 
 		STRICT_EXPECTED_CALL(mocks, DotNET_Create((BROKER_HANDLE)0x42, IGNORED_PTR_ARG))
 			.IgnoreArgument(2)
 			.SetFailReturn((MODULE_HANDLE*)NULL);
+
+        STRICT_EXPECTED_CALL(mocks, gballoc_free(IGNORED_PTR_ARG))
+            .IgnoreArgument(1);
 
 		///act
 		auto result = DotNET_HL_Create((BROKER_HANDLE)0x42, (const void*)FAKE_CONFIG);
@@ -683,13 +699,19 @@ BEGIN_TEST_SUITE(dotnet_hl_ut)
 		STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "dotnet_module_entry_class"))
 			.IgnoreArgument(1);
 
-		STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "dotnet_module_args"))
+		STRICT_EXPECTED_CALL(mocks, json_object_get_value(IGNORED_PTR_ARG, "dotnet_module_args"))
 			.IgnoreArgument(1);
+
+        STRICT_EXPECTED_CALL(mocks, json_serialize_to_string(IGNORED_PTR_ARG))
+            .IgnoreArgument(1);
 
 		STRICT_EXPECTED_CALL(mocks, MODULE_STATIC_GETAPIS(DOTNET_HOST)());
 
 		STRICT_EXPECTED_CALL(mocks, DotNET_Create((BROKER_HANDLE)0x42, IGNORED_PTR_ARG))
 			.IgnoreArgument(2);
+
+        STRICT_EXPECTED_CALL(mocks, gballoc_free(IGNORED_PTR_ARG))
+            .IgnoreArgument(1);
 
 		///act
 		auto result = DotNET_HL_Create((BROKER_HANDLE)0x42, (const void*)FAKE_CONFIG);
@@ -780,9 +802,9 @@ BEGIN_TEST_SUITE(dotnet_hl_ut)
 
 		///assert
 		ASSERT_IS_NOT_NULL(apis);
-		ASSERT_IS_NOT_NULL(apis->Module_Destroy);
-		ASSERT_IS_NOT_NULL(apis->Module_Create);
-		ASSERT_IS_NOT_NULL(apis->Module_Receive);
+		ASSERT_IS_NOT_NULL((void*)apis->Module_Destroy);
+		ASSERT_IS_NOT_NULL((void*)apis->Module_Create);
+		ASSERT_IS_NOT_NULL((void*)apis->Module_Receive);
 
 		///cleanup
 	}
