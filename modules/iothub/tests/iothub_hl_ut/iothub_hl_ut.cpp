@@ -126,6 +126,10 @@ public:
         {
             result2 = "abc";
         }
+        else if (strcmp(name, "MinimumPollingTime") == 0)
+        {
+            result2 = "5";
+        }
         else
 	    {
 		    result2 = NULL;
@@ -252,6 +256,8 @@ TEST_FUNCTION(IotHub_HL_Create_success)
     STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "Transport"))
         .IgnoreArgument(1)
         .SetReturn("HTTP");
+    STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "MinimumPollingTime"))
+        .IgnoreArgument(1);
     STRICT_EXPECTED_CALL(mocks, MODULE_STATIC_GETAPIS(IOTHUB_MODULE)());
 	STRICT_EXPECTED_CALL(mocks, IotHub_Create(broker, IGNORED_PTR_ARG))
         .IgnoreArgument(2);
@@ -280,6 +286,8 @@ TEST_FUNCTION(IotHub_HL_Create_interprets_HTTP_transport)
     STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "Transport"))
         .IgnoreArgument(1)
         .SetReturn("HTTP");
+    STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "MinimumPollingTime"))
+        .IgnoreArgument(1);
     STRICT_EXPECTED_CALL(mocks, IotHub_Create(broker, IGNORED_PTR_ARG))
         .ValidateArgumentBuffer(2, &provider, sizeof(provider), offsetof(IOTHUB_CONFIG, transportProvider));
 
@@ -359,6 +367,11 @@ TEST_FUNCTION(IotHub_HL_Create_interprets_the_transport_string_without_regard_to
         STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "Transport"))
             .IgnoreArgument(1)
             .SetReturn(transportStrings[i]);
+        if (i == 0)
+        {
+            STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "MinimumPollingTime"))
+                .IgnoreArgument(1);
+        }
         STRICT_EXPECTED_CALL(mocks, IotHub_Create(broker, IGNORED_PTR_ARG))
             .ValidateArgumentBuffer(2, &providers[i], sizeof(IOTHUB_CLIENT_TRANSPORT_PROVIDER), offsetof(IOTHUB_CONFIG, transportProvider));
 
@@ -415,6 +428,8 @@ TEST_FUNCTION(IotHub_HL_Create_ll_module_null_returns_null)
     STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "Transport"))
         .IgnoreArgument(1)
         .SetReturn("HTTP");
+    STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "MinimumPollingTime"))
+        .IgnoreArgument(1);
     STRICT_EXPECTED_CALL(mocks, MODULE_STATIC_GETAPIS(IOTHUB_MODULE)());
 	STRICT_EXPECTED_CALL(mocks, IotHub_Create(broker, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
@@ -514,6 +529,45 @@ TEST_FUNCTION(IotHub_HL_Create_IoTHubName_not_found_returns_null)
 
 	///cleanup
 }
+
+//Tests_SRS_IOTHUBMODULE_HL_20_015: [ If the JSON object does not contain a value named "MinimumPollingTime" or the value is not an integer or the value is 0 then `IoTHubHttp_HL_Create` log an error and continue. ]
+TEST_FUNCTION(IoTHub_HL_Create_MinimumPollingTime_not_found_succeeds)
+{
+    ///arrange
+    IotHubHLMocks mocks;
+    const char * validJsonString = "calling it valid makes it so";
+    BROKER_HANDLE broker = (BROKER_HANDLE)0x42;
+
+    STRICT_EXPECTED_CALL(mocks, json_parse_string(validJsonString));
+    STRICT_EXPECTED_CALL(mocks, json_value_get_object(IGNORED_PTR_ARG))
+        .IgnoreArgument(1);
+    STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "IoTHubName"))
+        .IgnoreArgument(1);
+    STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "IoTHubSuffix"))
+        .IgnoreArgument(1);
+    STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "Transport"))
+        .IgnoreArgument(1)
+        .SetReturn("HTTP");
+    STRICT_EXPECTED_CALL(mocks, json_object_get_string(IGNORED_PTR_ARG, "MinimumPollingTime"))
+        .IgnoreArgument(1)
+        .SetFailReturn((const char *)NULL);
+    STRICT_EXPECTED_CALL(mocks, MODULE_STATIC_GETAPIS(IOTHUB_MODULE)());
+    STRICT_EXPECTED_CALL(mocks, IotHub_Create(broker, IGNORED_PTR_ARG))
+        .IgnoreArgument(2);
+    STRICT_EXPECTED_CALL(mocks, json_value_free(IGNORED_PTR_ARG))
+        .IgnoreArgument(1);
+
+    ///act
+    auto result = Module_Create(broker, validJsonString);
+    ///assert
+
+    ASSERT_IS_NOT_NULL(result);
+    mocks.AssertActualAndExpectedCalls();
+
+    ///cleanup
+    Module_Destroy(result);
+}
+
 
 /*Tests_SRS_IOTHUBMODULE_HL_17_005: [ If parsing of `configuration` fails, `IotHub_HL_Create` shall fail and return NULL. ]*/
 TEST_FUNCTION(IotHub_HL_Create_get_object_null_returns_null)

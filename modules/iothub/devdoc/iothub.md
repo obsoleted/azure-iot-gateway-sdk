@@ -15,6 +15,8 @@ send a message with the following properties:
 >| source       | The module only processes messages that have source set to "mapping".        |
 >| deviceName   | The device ID registered with IoT Hub                                        |
 >| deviceKey    | The device key registered with IoT Hub                                       |
+>| deviceToken  | The shared access token of the device as alternative to the key              |
+
 
 The body of the message will be sent to IoT Hub on behalf of the given device.
 
@@ -41,6 +43,8 @@ typedef struct IOTHUB_CONFIG_TAG
 	const char* IoTHubName;   /*the name of the IoT hub*/
 	const char* IoTHubSuffix; /*the suffix used in generating the host name*/
     IOTHUB_CLIENT_TRANSPORT_PROVIDER transportProvider;
+	unsigned int MinimumPollingTime; /*The HTTP polling interval, if 0, the default SDK value is used, right now 25 minutes */
+
 }IOTHUB_CONFIG; /*this needs to be passed to the Module_Create function*/
 ```
 
@@ -64,6 +68,8 @@ Each {device ID, device key, IoTHubClient handle} triplet is referred to as a "p
 **SRS_IOTHUBMODULE_02_028: [** `IotHub_Create` shall create a copy of `configuration->IoTHubName`. **]**
 **SRS_IOTHUBMODULE_02_029: [** `IotHub_Create` shall create a copy of `configuration->IoTHubSuffix`. **]**
 **SRS_IOTHUBMODULE_17_004: [** `IotHub_Create` shall store the broker. **]**
+**SRS_IOTHUBMODULE_20_001: [** If minimum polling time is not 0, `IoTHubHttp_Create` shall configure the http transport with the minimum polling time calling IoTHubTransport_SetOption on the transport provider**]**
+
 **SRS_IOTHUBMODULE_02_027: [** When `IotHub_Create` encounters an internal failure it shall fail and return `NULL`. **]**
 **SRS_IOTHUBMODULE_02_008: [** Otherwise, `IotHub_Create` shall return a non-`NULL` handle. **]**
 
@@ -81,6 +87,8 @@ void IoTHub_Receive(MODULE_HANDLE moduleHandle, MESSAGE_HANDLE messageHandle);
 **SRS_IOTHUBMODULE_05_002: [** If a new personality is created and the module's transport has already been created (in `IotHub_Create`), an `IOTHUB_CLIENT_HANDLE` will be added to the personality by a call to `IoTHubClient_CreateWithTransport`. **]**
 **SRS_IOTHUBMODULE_05_003: [** If a new personality is created and the module's transport has not already been created, an `IOTHUB_CLIENT_HANDLE` will be added to the personality by a call to `IoTHubClient_Create` with the corresponding transport provider. **]**
 **SRS_IOTHUBMODULE_17_003: [** If a new personality is created, then the associated IoTHubClient will be set to receive messages by calling `IoTHubClient_SetMessageCallback` with callback function `IotHub_ReceiveMessageCallback`, and the personality as context. **]**
+**SRS_IOTHUBMODULE_20_002: [** If an existing `PERSONALITY` has a device token, and it is different than the one passed, it shall be destroyed and a new one created.**]** 
+
 **SRS_IOTHUBMODULE_02_014: [** If creating the personality fails then `IotHub_Receive` shall return. **]**
 **SRS_IOTHUBMODULE_02_016: [** If adding a new personality to the vector fails, then `IoTHub_Receive` shall return. **]**
 **SRS_IOTHUBMODULE_02_018: [** `IotHub_Receive` shall create a new IOTHUB_MESSAGE_HANDLE having the same content as `messageHandle`, and the same properties with the exception of `deviceName` and `deviceKey`. **]**

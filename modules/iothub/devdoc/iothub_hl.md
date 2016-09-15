@@ -21,7 +21,9 @@ with a specialized create function to interpret the serialized JSON module argum
 {
     "IoTHubName" : "<the name of the IoTHub>",
     "IoTHubSuffix" : "<the suffix used in generating the host name>",
-    "Transport" : "HTTP" | "http" | "AMQP" | "amqp" | "MQTT" | "mqtt"
+    "Transport" : "HTTP" | "http" | "AMQP" | "amqp" | "MQTT" | "mqtt",
+    
+    "MinimumPollingTime" : "Interval between C2D polling calls.  0 == SDK default, HTTP only"
 }
 ```
 
@@ -40,6 +42,9 @@ given to `Gateway_Create_From_JSON`.
 **SRS_IOTHUBMODULE_HL_17_005: [** If parsing of `configuration` fails, `IotHub_HL_Create` shall fail and return NULL. **]**
 **SRS_IOTHUBMODULE_HL_17_006: [** If the JSON object does not contain a value named "IoTHubName" then `IotHub_HL_Create` shall fail and return NULL. **]**
 **SRS_IOTHUBMODULE_HL_17_007: [** If the JSON object does not contain a value named "IoTHubSuffix" then `IotHub_HL_Create` shall fail and return NULL. **]**
+**SRS_IOTHUBMODULE_HL_20_015: [** If the JSON object does not contain a value named "MinimumPollingTime" or the value is not an integer or the value is 0 then `IoTHubHttp_HL_Create` log an error and continue. **]**
+
+
 **SRS_IOTHUBMODULE_HL_05_001: [** If the JSON object does not contain a value named "Transport" then `IotHub_HL_Create` shall fail and return NULL. **]**
 **SRS_IOTHUBMODULE_HL_05_002: [** If the value of "Transport" is not one of "HTTP", "AMQP", or "MQTT" (case-insensitive) then `IotHub_HL_Create` shall fail and return NULL. **]**
 **SRS_IOTHUBMODULE_HL_17_008: [** `IotHub_HL_Create` shall invoke the IotHub module's create function, using the broker, IotHubName, IoTHubSuffix, and Transport. **]**
