@@ -286,6 +286,19 @@ static void publish_mock_message(const v8::FunctionCallbackInfo<v8::Value>& info
     g_mock_module.publish_mock_message();
 }
 
+static const char * NOOP_JS_MODULE = "module.exports = { "   \
+"create: function(broker, configuration) { "       \
+"  console.log('create'); "                            \
+"  return true; "                                      \
+"}, "                                                  \
+"receive: function(msg) { "                            \
+"  console.log('receive'); "                           \
+"}, "                                                  \
+"destroy: function() { "                               \
+"  console.log('destroy'); "                           \
+"} "                                                   \
+"};";
+
 BEGIN_TEST_SUITE(nodejs_int)
 
     TEST_SUITE_INITIALIZE(TestClassInitialize)
@@ -294,9 +307,11 @@ BEGIN_TEST_SUITE(nodejs_int)
         g_testByTest = MicroMockCreateMutex();
         ASSERT_IS_NOT_NULL(g_testByTest);
 
-        NODEJS_Create = Module_GetAPIS()->Module_Create;
-        NODEJS_Destroy = Module_GetAPIS()->Module_Destroy;
-        NODEJS_Receive = Module_GetAPIS()->Module_Receive;
+		MODULE_APIS apis;
+		Module_GetAPIS(&apis);
+        NODEJS_Create = apis.Module_Create;
+        NODEJS_Destroy = apis.Module_Destroy;
+        NODEJS_Receive = apis.Module_Receive;
 
         g_broker = Broker_Create();
 
@@ -349,18 +364,19 @@ BEGIN_TEST_SUITE(nodejs_int)
         }
     }
 
+    /* Tests_SRS_NODEJS_26_001: [ `Module_GetAPIS` shall fill out the provided `MODULES_API` structure with required module's APIs functions. ] */
     TEST_FUNCTION(Module_GetAPIS_returns_non_NULL_and_non_NULL_fields)
     {
         ///arrrange
 
         ///act
-        auto result = Module_GetAPIS();
+		MODULE_APIS apis;
+		Module_GetAPIS(&apis);
 
         ///assert
-        ASSERT_IS_NOT_NULL(result);
-        ASSERT_IS_NOT_NULL(result->Module_Create);
-        ASSERT_IS_NOT_NULL(result->Module_Destroy);
-        ASSERT_IS_NOT_NULL(result->Module_Receive);
+        ASSERT_IS_TRUE(apis.Module_Create != NULL);
+        ASSERT_IS_TRUE(apis.Module_Destroy != NULL);
+        ASSERT_IS_TRUE(apis.Module_Receive != NULL);
     }
 
     TEST_FUNCTION(NODEJS_Create_returns_NULL_for_NULL_broker_handle)
@@ -430,12 +446,6 @@ BEGIN_TEST_SUITE(nodejs_int)
     TEST_FUNCTION(NODEJS_Create_returns_handle_for_NULL_config_json)
     {
         ///arrange
-        const char* NOOP_JS_MODULE =
-            "module.exports = { "                        \
-            "create: function(b, c) { return true; }, "  \
-            "receive: function(m) {}, "                  \
-            "destroy: function() {} "                    \
-            "};";
 
         TempFile js_file;
         js_file.Write(NOOP_JS_MODULE);
@@ -463,21 +473,11 @@ BEGIN_TEST_SUITE(nodejs_int)
         NODEJS_Destroy(result);
     }
 
+
+
     TEST_FUNCTION(NODEJS_Create_returns_handle_for_valid_main_file_path)
     {
-        ///arrrange
-        const char* NOOP_JS_MODULE = "module.exports = { "   \
-            "create: function(broker, configuration) { "       \
-            "  console.log('create'); "                            \
-            "  return true; "                                      \
-            "}, "                                                  \
-            "receive: function(msg) { "                            \
-            "  console.log('receive'); "                           \
-            "}, "                                                  \
-            "destroy: function() { "                               \
-            "  console.log('destroy'); "                           \
-            "} "                                                   \
-            "};";
+        ///arrange
 
         TempFile js_file;
         js_file.Write(NOOP_JS_MODULE);
@@ -504,6 +504,44 @@ BEGIN_TEST_SUITE(nodejs_int)
         ///cleanup
         NODEJS_Destroy(result);
     }
+
+	TEST_FUNCTION(NODEJS_Create_returns_handle_for_adding_same_nodejs_module_twice)
+	{
+		///arrange
+
+		TempFile js_file;
+		js_file.Write(NOOP_JS_MODULE);
+
+		NODEJS_MODULE_CONFIG config = {
+			js_file.js_file_path.c_str(),
+			"{}"
+		};
+
+		///act
+		auto result1 = NODEJS_Create(g_broker, &config);
+		auto result2 = NODEJS_Create(g_broker, &config);
+
+		///assert
+		ASSERT_IS_NOT_NULL(result1);
+		ASSERT_IS_NOT_NULL(result2);
+		ASSERT_IS_TRUE(result1 != result2);
+
+		// wait for 15 seconds for the create to get done
+		NODEJS_MODULE_HANDLE_DATA* handle_data1 = reinterpret_cast<NODEJS_MODULE_HANDLE_DATA*>(result1);
+		NODEJS_MODULE_HANDLE_DATA* handle_data2 = reinterpret_cast<NODEJS_MODULE_HANDLE_DATA*>(result2);
+		wait_for_predicate(15, [handle_data1, handle_data2]() {
+			return handle_data1->GetModuleState() == NodeModuleState::initialized && 
+				   handle_data2->GetModuleState() == NodeModuleState::initialized;
+		});
+		ASSERT_IS_TRUE(handle_data1->GetModuleState() == NodeModuleState::initialized);
+		ASSERT_IS_TRUE(handle_data1->module_object.IsEmpty() == false);
+		ASSERT_IS_TRUE(handle_data2->GetModuleState() == NodeModuleState::initialized);
+		ASSERT_IS_TRUE(handle_data2->module_object.IsEmpty() == false);
+
+		///cleanup
+		NODEJS_Destroy(result1);
+		NODEJS_Destroy(result2);
+	}
 
     TEST_FUNCTION(nodejs_module_publishes_message)
     {
@@ -547,8 +585,10 @@ BEGIN_TEST_SUITE(nodejs_int)
 
         ///act
         auto result = NODEJS_Create(g_broker, &config);
-        MODULE module = {
-            Module_GetAPIS(),
+		MODULE_APIS apis;
+		Module_GetAPIS(&apis);
+		MODULE module = {
+			&apis,
             result
         };
         Broker_AddModule(g_broker, &module);
@@ -1021,8 +1061,10 @@ BEGIN_TEST_SUITE(nodejs_int)
 
         ///act
         auto result = NODEJS_Create(g_broker, &config);
-        MODULE module = {
-            Module_GetAPIS(),
+		MODULE_APIS apis;
+		Module_GetAPIS(&apis);
+		MODULE module = {
+            &apis,
             result
         };
         Broker_AddModule(g_broker, &module);
