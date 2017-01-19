@@ -54,6 +54,7 @@ option(enable_ble_module "set enable_ble_module to OFF to remove ble module from
 option(use_amqp "set use_amqp to ON if amqp is to be used, set to OFF to not use amqp" ON)
 option(use_http "set use_http to ON if http is to be used, set to OFF to not use http" ON)
 option(use_mqtt "set use_mqtt to ON if mqtt is to be used, set to OFF to not use mqtt" ON)
+option(allow_comments_in_json "set allow_comments_in_json to ON to allow comments in config json (default is OFF)" OFF)
 
 
 SET(use_condition ON CACHE BOOL "Build C shared utility with condition code" FORCE)

@@ -54,7 +54,12 @@ GATEWAY_HANDLE Gateway_CreateFromJson(const char* file_path)
             JSON_Value *root_value;
 
             /*Codes_SRS_GATEWAY_JSON_14_002: [The function shall use parson to read the file and parse the JSON string to a parson JSON_Value structure.]*/
+#ifdef ALLOW_COMMENTS_IN_JSON
+            root_value = json_parse_file_with_comments(file_path);
+#else
             root_value = json_parse_file(file_path);
+#endif
+
             if (root_value != NULL)
             {
                 /*Codes_SRS_GATEWAY_JSON_14_004: [The function shall traverse the JSON_Value object to initialize a GATEWAY_PROPERTIES instance.]*/

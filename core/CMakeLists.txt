@@ -140,6 +140,10 @@ if(${enable_nodejs_binding})
     include_directories(../bindings/nodejs/inc)
 endif()
 
+if(${allow_comments_in_json})
+    add_definitions(-DALLOW_COMMENTS_IN_JSON)
+endif()
+
 include_directories(./inc)
 
 add_library(gateway SHARED

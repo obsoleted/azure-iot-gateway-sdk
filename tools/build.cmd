@@ -29,6 +29,7 @@ set enable-java-binding=OFF
 set enable_nodejs_binding=OFF
 set CMAKE_enable_ble_module=ON
 set dependency_install_prefix="-Ddependency_install_prefix=%local-install%"
+set allow_comments_in_json=OFF
 
 :args-loop
 if "%1" equ "" goto args-done
@@ -41,6 +42,7 @@ if "%1" equ "--enable-java-binding" goto arg-enable-java-binding
 if "%1" equ "--enable-nodejs-binding" goto arg-enable_nodejs_binding
 if "%1" equ "--disable-ble-module" goto arg-disable_ble_module
 if "%1" equ "--system-deps-path" goto arg-system-deps-path
+if "%1" equ "--allow-comments-in-json" goto arg-allow-comments-in-json
 
 call :usage && exit /b 1
 
@@ -86,6 +88,10 @@ goto args-continue
 set dependency_install_prefix=""
 goto args-continue
 
+:arg-allow-comments-in-json
+set allow_comments_in_json=ON
+goto args-continue
+
 :args-continue
 shift
 goto args-loop
@@ -112,11 +118,11 @@ if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 pushd %cmake-root%
 if %build-platform% == x64 (
     echo ***Running CMAKE for Win64***
-        cmake %dependency_install_prefix% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Drun_e2e_tests:BOOL=%CMAKE_run_e2e_tests% -Denable_dotnet_binding:BOOL=%CMAKE_enable_dotnet_binding% -Denable_java_binding:BOOL=%enable-java-binding% -Denable_nodejs_binding:BOOL=%enable_nodejs_binding% -Denable_ble_module:BOOL=%CMAKE_enable_ble_module% "%build-root%" -G "Visual Studio 14 Win64"
+        cmake %dependency_install_prefix% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Drun_e2e_tests:BOOL=%CMAKE_run_e2e_tests% -Denable_dotnet_binding:BOOL=%CMAKE_enable_dotnet_binding% -Denable_java_binding:BOOL=%enable-java-binding% -Denable_nodejs_binding:BOOL=%enable_nodejs_binding% -Denable_ble_module:BOOL=%CMAKE_enable_ble_module% -Dallow_comments_in_json:BOOL=%allow_comments_in_json% "%build-root%" -G "Visual Studio 14 Win64"
         if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 ) else (
     echo ***Running CMAKE for Win32***
-        cmake %dependency_install_prefix% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Drun_e2e_tests:BOOL=%CMAKE_run_e2e_tests% -Denable_dotnet_binding:BOOL=%CMAKE_enable_dotnet_binding% -Denable_java_binding:BOOL=%enable-java-binding% -Denable_nodejs_binding:BOOL=%enable_nodejs_binding% -Denable_ble_module:BOOL=%CMAKE_enable_ble_module% "%build-root%"
+        cmake %dependency_install_prefix% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Drun_e2e_tests:BOOL=%CMAKE_run_e2e_tests% -Denable_dotnet_binding:BOOL=%CMAKE_enable_dotnet_binding% -Denable_java_binding:BOOL=%enable-java-binding% -Denable_nodejs_binding:BOOL=%enable_nodejs_binding% -Denable_ble_module:BOOL=%CMAKE_enable_ble_module% -Dallow_comments_in_json:BOOL=%allow_comments_in_json% "%build-root%"
         if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 )
 
